@@ -1,3 +1,4 @@
+import { GithubUser } from "./GithubUser.js"
 //criação de dados E estruturação
 export class Favorites{ 
     constructor(root){
@@ -6,24 +7,35 @@ export class Favorites{
     }
 
 
-
     load(){ // AQUI ESTÃO OS OBJETOS COM OS USUARIOS
         this.entries = JSON.parse(localStorage.getItem('@github-favorites:')) || [] // logica que cria um array com o que esta no local estorage ou cria um array vazio
-        /* Transforma as strings em Json em um objeto ou array  */
+        /* 
+        parse = Retorna o valor atual associado à chave fornecida ou nulo se a chave fornecida não existir
+        Transforma as strings em Json em um objeto ou array  */
     }
 
 
     async add(username){
+        
+
+        
 
         try {
-            const user = await GithubUser.search(username)
+
+            const userExists = this.entries.find(entry => entry.login == username)
+
+            if(userExists){
+                throw new Error('Usuario já cadastrado')
+            }
+
+            const user = await GithubUser.search(username)  
 
             if (user.login === undefined) {
                 throw new Error('Usuario não encontrado !')
             }
 
             this.entries = [user, ...this.entries] // imutabilidade - cria um novo array 
-            this.update() // atualiza a vizualização
+            this.update() // atualiza a  vizualização
             this.save()
             
         } catch(error) {
@@ -37,12 +49,18 @@ export class Favorites{
 
     save(){
         localStorage.setItem('@github-favorites:',JSON.stringify(this.entries))
+    
+    
     }
 
     delete(user){
 
         const filteredEntries = this.entries.filter( entry => entry.login !== user.login)
-        /* Se o valor for true ele mantem o array , se for false ele vai mudar principio de imutabilidade 
+        /* Se o valo
+        
+        r for true ele 
+        
+        mantem o array , se for false ele vai mudar principio de imutabilidade 
         o array anterior deixa de existir e é criado um novo */
         this.entries = filteredEntries // recebe o novo array 
         this.update()
@@ -50,30 +68,6 @@ export class Favorites{
     }
     
 }
-
-
-// PEGA AS INFORMAÇÕES DA API DO GITHUB
-export class GithubUser{
-    static search(username){
-        const endpoint = `https://api.github.com/users/${username}`
-
-
-        return fetch(endpoint)
-        .then(data => data.json())
-        .then(({login,name,public_repos,followeers}) => 
-        (
-            {
-                login,
-                name,
-                public_repos,
-                followeers
-            }
-        ))
-
-        /* É feito a desustruração */
-    }
-}
-
 
 // Vizualização
 
@@ -96,11 +90,13 @@ export class FavoritesView extends Favorites {
         }
     }
 
-    update(){ // 
-        this.removeAllTr() 
+    update(){ //
+        this.removeAllTr()
 
         this.entries.forEach( user => { // para cada entrada crie uma linha 
-            const row = this.createrow() // CRIA UMA LINHA OU SEJA UMA TR NO HTML  rfrufvgbitugtgvrfuruktr
+           
+           
+            const row = this.createrow() // CRIA UMA LINHA OU SEJA UMA TR NO HTML 
 
             row.querySelector('.user img').src = `https://github.com/${user.login}.png` // dentro de cada linha vá ate a img e altere o src pelo que foi colocado no array de objetos
             row.querySelector('.user img').alt = `Imagem de ${user.name}`
@@ -158,3 +154,5 @@ export class FavoritesView extends Favorites {
 
     
 }
+
+
